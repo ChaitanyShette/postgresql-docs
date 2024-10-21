@@ -1,0 +1,134 @@
+*********postgres installation*********
+
+sudo apt upgrade  [upgrade pkgs]
+
+sudo apt install postgresql [install pkg]
+
+systemctl status postgresql [check the status of pkg]
+
+
+cd /etc/postgresql/14/main [edit file]
+
+nano postgresql.conf
+ 
+listen_addresses = 'server-ip'
+port = port-number
+
+nano pg_hba.conf 
+
+host    all             all             0.0.0.0/0             md5
+
+systemctl restart postgresql
+
+psql -h server-ip -p port-number dbname user-name
+[for check connection of db]
+
+sudo -i -u postgres [open postgres]
+
+psql [entered in psql]
+
+CREATE ROLE username; [use for create user]
+
+CREATE DATABASE DBname; [use for create db]
+
+GRANT ALL PRIVILEGES ON DATABASE Dbname to username; [use for upgrade privileges of user to be superuser]
+
+ALTER ROLE Username WITH LOGIN; [this also use for create user with id and password]
+
+\password username [use for set password] 
+password - rhythM@2023F
+
+\q [exit from db]
+\l  [list of database]
+
+psql chaitany [go to database chaitany]
+
+\dt    [show all tables in DB]
+
+select * from summary_tbl_health28;    [for open table] 
+
+
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = 'DBname';    [remove all backend activity from DB]
+
+DROP DATABASE Dbname;
+drop role username;
+
+ALTER DATABASE name OWNER TO new_owner;   (for change db owner)
+
+REASSIGN OWNED BY old_name TO new_name;   (change owner with all table)
+
+
+*******DB Backup and Restore*******
+
+pg_dump -U username -h server-ip -p 5432 --file=chaitany_bkp.sql
+[take Db backup from server in plain or text format]
+
+psql -U username -h server-ip -p 5432 -d db-name -f db-name-bkp-12-12-23.sql
+[restore backup plain or text file in DB ]
+
+pg_restore -U chaitany -d backupdb -h server-ip -p 5432 -v "chaitany_bkp.sql"
+[restore backup encrypted file in DB ]
+
+GRANT ALL PRIVILEGES ON SCHEMA schema_name TO role_name;
+
+
+********Create role with only read permission********
+CREATE USER your_username WITH PASSWORD 'your_password';
+
+GRANT CONNECT ON DATABASE Dbname TO username;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO username;      
+[this permission exicute in within database psql Dbname ]
+
+***********Database move in mount point********
+
+systemctl stop postgresql
+
+sudo rsync -av /usr/bin/postgres "-D" "/uo1/postgresql-data"
+
+cd /etc/postgresql/14/main
+
+nano postgresql.conf
+
+data_directory = '/u01/postgresql-data'
+[edit data directory in this file]
+
+systemctl start postgresql
+
+systemctl status postgresql
+
+sudo -i -u postgres
+
+psql or psql -p portnumber
+*********upgrade version*********
+postgres 15 install on ubuntu
+
+sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt update
+sudo apt upgrade
+sudo apt install postgresql-15
+sudo rsync -av /var/lib/postgresql/15/main/ /u01/postgresql-data
+sudo nano /etc/postgresql/15/main/postgresql.conf                   - data-directort path change
+sudo nano /etc/postgresql/15/main/pg_hba.conf
+sudo chown -R postgres:postgres /u01/postgresql-data
+sudo systemctl start postgresql
+su - postgres 
+psql
+
+
+
+******create server user as postgres admin user******
+sudo adduser newusername (create user in server)
+
+CREATE ROLE new_superuser WITH SUPERUSER LOGIN PASSWORD 'password'; (create same user in postgresql)
+
+\q
+
+exit
+
+su - newusername
+
+psql postgres
